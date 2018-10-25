@@ -10,9 +10,12 @@ class TimeoutputTimeseries(object):
   """
   Class to create pcrcalc timeoutput style timeseries
   """
-  def __init__(self, tssFilename, model, idMap=None, noHeader=False, save_path=None):
+  def __init__(self, tssFilename, model, idMap=None, noHeader=False, save_path=None, period=None, sample_nr=None):
     """
 	Method adapted to be able to save to a specific output folder (PAZ)
+    save_path=None: folder path in coupled model.
+    period=None: periods in between LISEM runs, corresponds to saving folders
+    sample_nr=None: Montecarlo sample, coupled Dynamic framework only, use for saving
     """
 
     if not isinstance(tssFilename, str):
@@ -27,7 +30,9 @@ class TimeoutputTimeseries(object):
     self._writeHeader = not noHeader
     # array to store the timestep values
     self._sampleValues = None
-    self._save_path = save_path
+    self._save_path = save_path  # PAZ
+    self._period = period  # PAZ
+    self.sample_nr = sample_nr
 
     _idMap = False
     if isinstance(idMap, str) or isinstance(idMap, pcraster._pcraster.Field):
@@ -206,8 +211,14 @@ class TimeoutputTimeseries(object):
     # for stochastic add sample directory
     if hasattr(self._userModel, "nrSamples"):
 	  filename = os.path.join(str(self._userModel.currentSampleNumber()), filename)
-    elif self._save_path is not None:
-      filename = os.path.join(self._save_path, filename)
+      
+    elif self._save_path is not None:  # PAZ
+      if self.sample_nr is not None:
+        new_path = self._save_path + "Bs" + str(self.sample_nr) + "\\" + str(self._period)
+      else:
+        new_path = self._save_path + str(self._period)
+        
+      filename = os.path.join(new_path, filename)
           
 
     return filename
